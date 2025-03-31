@@ -1,0 +1,8 @@
+EXPORTS
+	kpi_api_xn ; 1
+	kpi_api_xt ; 1
+	kpi_api_xp ; 1
+	kpi_api_dot ; 2
+	kpi_api_boolean0 ; 1
+	kpi_api_boolean1 ; 1
+	kpi_api_boolean2 ; 1
