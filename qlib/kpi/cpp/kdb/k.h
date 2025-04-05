@@ -79,6 +79,7 @@ extern"C"{
 # define kx_kK(x)	((K*)kx_kG(x))
 
 //      type bytes qtype     ctype  accessor
+# define kx_KK 0  // 0 K         K      kK
 # define kx_KB 1  // 1 boolean   char   kG
 # define kx_UU 2  // 16 guid     U      kU
 # define kx_KG 4  // 1 byte      char   kG

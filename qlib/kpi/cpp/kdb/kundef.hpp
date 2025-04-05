@@ -12,6 +12,7 @@
 # undef kx_kK
 
 //      type bytes qtype    ctype  accessor
+# undef kx_KK // 0 K        K      kK
 # undef kx_KB // 1 boolean  char   kG
 # undef kx_KG // 1 byte     char   kG
 # undef kx_KH // 2 short    short  kH

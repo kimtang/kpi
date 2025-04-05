@@ -84,6 +84,7 @@
 # define kdb_ktc_symbol(x) return x;
 # define kdb_ktc_date(x) return bday+boost::gregorian::days(x);
 # define kdb_ktc_char(x) return static_cast<char>(x);
+# define kdb_ktc_K(x) return x;
 
 # define kdb_ktc_timestampint64(t)																											\
 kx::J nnans = t % 1000000000;																												\
@@ -118,6 +119,7 @@ return pday +boost::gregorian::days(static_cast<int>(days)) +boost::posix_time::
 # define kdb_ctk_symbol(x) return ss(x);
 # define kdb_ctk_date(x) return (gday -x).days();
 # define kdb_ctk_char(x) return static_cast<kx::G>(x);
+# define kdb_ctk_K(x) return x;
 
 // 24*60*60*1000000000
 
@@ -134,6 +136,9 @@ return f;																															\
 
 # define kdb_dim 9
 
+// 
+// 0			,1		  ,2  ,3  ,4    ,5 ,6                  ,7                               ,8 
+// name			,type(int),get,ctk,getL,   ,                   ,ktc
 # define kdb_table																																			\
 ((boolean				,kx_KB,g,G,kx_kG,G*,	kdb_ktc_boolean,bool							,kdb_ctk_boolean		))									\
 ((short					,kx_KH,h,H,kx_kH,H*,	kdb_ktc_short,short								,kdb_ctk_short			))									\
@@ -146,6 +151,8 @@ return f;																															\
 ((date					,kx_KD,i,I,kx_kI,I*,	kdb_ktc_date,boost::gregorian::date				,kdb_ctk_date			))									\
 ((datetime				,kx_KZ,f,F,kx_kF,F*,	kdb_ktc_datetime,boost::posix_time::ptime		,kdb_ctk_datetime		))									\
 ((char					,kx_KC,g,G,kx_kC,G*,	kdb_ktc_char,char								,kdb_ctk_char			))									\
+((list					,kx_KK,k,K,kx_kK,K*,	kdb_ktc_K,K										,kdb_ctk_K				))									\
+
 
 # define kdb_qtype(r,data,tuple)																								\
 struct BOOST_PP_TUPLE_ELEM(kdb_dim,0,tuple)##_																					\
@@ -167,7 +174,7 @@ struct BOOST_PP_TUPLE_ELEM(kdb_dim,0,tuple)##_																					\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple) get(K k) const																			\
 	{																															\
-		return k -> BOOST_PP_TUPLE_ELEM(kdb_dim,2,tuple) ;																		\
+		return k -> BOOST_PP_TUPLE_ELEM(kdb_dim,2,tuple);																		\
 	}																															\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple)* getL(K k) const																		\
@@ -222,7 +229,7 @@ namespace qtype{
 	BOOST_PP_SEQ_FOR_EACH(kdb_qtype,~,kdb_table)
 
 	/* Todo:
-	We need to define the type map and table
+	We need to define the type list, map and table
 	*/
 
 } // qtype
@@ -387,13 +394,22 @@ public:
 			; // if the data is violated, do nothing
 		else
 		{
-			if (k_->t >= 0){
+			std::int8_t t = static_cast<std::int8_t>(k_->t);
+			if (t == 0)
+			{
+				size_ = static_cast<size_type>(k_->n);
+				k_ = kx::d9(kx::b9(-1, k_));
+			}
+
+			if (t > 0)
+			{
 				size_ = static_cast<size_type>(k_->n);
 				k_ = kx::ktn(q_id(), size_);
 				typename kx::result_of::getL<Q>::type k0 = kx::getL<Q>(k);
 				std::copy(k0, k0 + size_, begin());
 			}
-			else
+			
+			if (t < 0)
 			{
 				k_ = kx::ktn(q_id(),1);
 				size_=1;
@@ -460,6 +476,32 @@ private:
 	size_type size_;
 
 };
+
+std::map<std::string, kx::K> dict(kx::K k_)
+{
+	std::map<std::string, kx::K> m;
+	std::int8_t t0 = static_cast<std::int8_t>(k_->t);
+	if (t0 != 99) { return m; }
+	// kx::result_of::value<qtype::list_>::type* l_ = kx::getL<qtype::list_>(k_);
+	kx::K* l_ = kx::getL<qtype::list_>(k_);
+	kx::K k0 = l_[0];
+	kx::raw_vector<qtype::list_>v(l_[1]);
+
+	std::int8_t t1 = static_cast<std::int8_t>(k0->t);
+	if (t1 != qtype::symbol_::type()) { return m; };
+
+	kx::raw_vector<qtype::symbol_>k(k0);
+	kx::raw_vector<qtype::list_>::iterator v1 = v.begin();
+	kx::raw_vector<qtype::symbol_>::iterator k1 = k.begin();
+	while (v1 != v.end() && k1 != k.end())
+	{
+		std::string s(*k1);
+		m.insert(std::make_pair(s, *v1));
+		v1++; k1++;
+	}
+
+	return m;
+}
 
 
 } // kx

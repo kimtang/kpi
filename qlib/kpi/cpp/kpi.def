@@ -3,6 +3,10 @@ EXPORTS
 	kpi_api_xt ; 1
 	kpi_api_xp ; 1
 	kpi_api_dot ; 2
-	kpi_api_boolean0 ; 1
-	kpi_api_boolean1 ; 1
-	kpi_api_boolean2 ; 1
+	kpi_api_boolean_a ; 1
+	kpi_api_boolean_r ; 1
+	kpi_api_boolean_v ; 1
+	kpi_api_list_r ; 1
+	kpi_api_list_v ; 1
+	kpi_api_dict_k ; 1
+	kpi_api_dict_v ; 1

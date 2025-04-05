@@ -1,20 +1,24 @@
 
-.qtx.testSuite[`test..kpi;"test kpi"]
-  .qtx.repo[`]
-  .qtx.lib[`kpi]
-  .qtx.file[`001]    
-  .qtx.testCase[`arg.injection1;"argument injection"][
-    .qtx.shouldEq["description";0;{[a]a}]
-    .qtx.should["description";{.qtx.out[`c`d!3 4;1b]}]
-    .qtx.shouldEq["description";4;{[d]d}]    
-    .qtx.shouldFail["description";`ifail;{'`ifail}]
+/ name:localhost:9081::
+
+
+.qtx.testSuite[`kpi1;`repo`lib`file!`kpi`kpi`001;"test kpi"]
+  .qtx.before[{.import.module`kpi}]
+  .qtx.testCase[`xp;"test .kpi.api.xp"][
+    .qtx.shouldTrue[`0;"same pointer1";{[a] .kpi.api.xp[a]  ~ .kpi.api.xp a}]
+    .qtx.shouldTrue[`1;"different pointer";{[a;b] not .kpi.api.xp[b]  ~ .kpi.api.xp a }]
     .qtx.nil
     ]
-  .qtx.addArg[`a`b`c!0 1 2]
-  .qtx.testCase[`test.kpi.1;"test kpi"][
-    .qtx.before[{`a`b`c`d!3 4 5 6}]
-    .qtx.shouldEq["description";3;{[a]a}]
-    .qtx.shouldEq["description";6;{[d]d}]    
+  .qtx.testCase[`xn;"test .kpi.api.xn"][
+    .qtx.shouldTrue[`0;"get length";{[d] 4 ~ .kpi.api.xn d}]
     .qtx.nil
-    ]    
+    ]
+  .qtx.argument[`a`b`c`d!(0 1; 2; "str";(1;2;3;4f))]
   .qtx.nil
+  ;
+
+
+/
+
+(::)result:.qtx.execute .qtx.con
+

@@ -24,37 +24,48 @@ kx::K kpi_api_dot(kx::K a1, kx::K a2)
 ((datetime				,kx_KZ,f,F,kx_kF,F*,	kdb_ktc_datetime,boost::posix_time::ptime		,kdb_ctk_datetime		))									\
 ((char					,kx_KC,g,G,kx_kC,G*,	kdb_ktc_char,char								,kdb_ctk_char			))									\
 
-kx::K kpi_api_xn(kx::K x_)
-{
-	return kx::kj(x_->n);
+kx::K kpi_api_xn(kx::K x_){return kx::kj(x_->n);}
+kx::K kpi_api_xt(kx::K x_){return kx::kc(x_->t);}
+kx::K kpi_api_xp(kx::K x_){return kx::kj(reinterpret_cast<long>(x_));}
+
+
+kx::K kpi_api_boolean_a(kx::K x_){return kx::kb(kx::value<qtype::boolean_>(x_));}
+kx::K kpi_api_boolean_r(kx::K x_){return kx::raw_vector<qtype::boolean_>(x_).r1();} // to reuse the vector in raw_vector again you need to increase the count
+kx::K kpi_api_boolean_v(kx::K x_){return kx::vector<qtype::boolean_>(x_);} // the vector is copied
+
+kx::K kpi_api_list_r(kx::K x_) { return kx::raw_vector<qtype::list_>(x_).r1(); } // to reuse the vector in raw_vector again you need to increase the count
+kx::K kpi_api_list_v(kx::K x_) { return kx::vector<qtype::list_>(x_); } // to reuse the vector in raw_vector again you need to increase the count
+
+kx::K kpi_api_dict_k(kx::K x_) {
+	std::int8_t t = static_cast<std::int8_t>(x_->t);
+	if (t != 99) { return kx::krr("type"); }
+	std::map<std::string, kx::K> m = kx::dict(x_);
+	kx::vector<qtype::symbol_> v(m.size());
+	std::map<std::string, kx::K>::iterator m1 = m.begin();
+	kx::vector<qtype::symbol_>::iterator v1 = v.begin();
+
+	while (m1 != m.end())
+	{
+		*v1 = kx::ss((*m1).first.c_str() );
+		++m1; ++v1;
+	}
+
+	return v;
 }
 
-kx::K kpi_api_xt(kx::K x_)
-{
-	return kx::kc(x_->t);
-}
+kx::K kpi_api_dict_v(kx::K x_) {
+	std::int8_t t = static_cast<std::int8_t>(x_->t);
+	if (t != 99) { return kx::krr("type"); }
+	std::map<std::string, kx::K> m = kx::dict(x_);
+	kx::raw_vector<qtype::list_> v(m.size());
+	std::map<std::string, kx::K>::iterator m1 = m.begin();
+	kx::raw_vector<qtype::list_>::iterator v1 = v.begin();
 
-kx::K kpi_api_xp(kx::K x_)
-{
-	std::uintptr_t ptr = reinterpret_cast<long>(x_);
-	return kx::kj(ptr);
-}
+	while (m1 != m.end())
+	{
+		*v1 = (*m1).second;
+		++m1; ++v1;
+	}
 
-
-kx::K kpi_api_boolean0(kx::K x_)
-{
-	kx::result_of::value<qtype::long_>::type x = kx::value<qtype::long_>(x_);
-	return kx::kb(x);
-}
-
-kx::K kpi_api_boolean1(kx::K x_)
-{
-	kx::raw_vector<qtype::boolean_> x(x_);
-	return x.r1(); // to reuse the vector in raw_vector again you need to increase the count
-}
-
-kx::K kpi_api_boolean2(kx::K x_)
-{
-	kx::vector<qtype::boolean_> x(x_);
-	return x; // the vector is copied
+	return v.r1();
 }
