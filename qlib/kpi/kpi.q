@@ -1,6 +1,6 @@
 
 d)lib kpi.kpi 
- Library for working with the os
+ Library for working with qkdb internal api
  q).import.module`kpi 
  q).import.module`kpi.kpi
  q).import.module"%kpi%/qlib/kpi/kpi.q"

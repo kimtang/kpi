@@ -477,7 +477,7 @@ private:
 
 };
 
-std::map<std::string, kx::K> dict(kx::K k_)
+std::map<std::string, kx::K> k2d(kx::K k_)
 {
 	std::map<std::string, kx::K> m;
 	std::int8_t t0 = static_cast<std::int8_t>(k_->t);
@@ -502,7 +502,6 @@ std::map<std::string, kx::K> dict(kx::K k_)
 
 	return m;
 }
-
 
 } // kx
 

@@ -5,5 +5,10 @@ args:.Q.def[`name`port!("99.q";8065);].Q.opt .z.x
 { if[not x=0; @[x;"\\\\";()]]; value"\\p 8065"; } @[hopen;`:localhost:8065;0];
 
 \l qlib.q
-.import.require`kpi
 
+.import.require`qtx.watchTest;
+.watchTest.start`kpi;
+
+
+
+/

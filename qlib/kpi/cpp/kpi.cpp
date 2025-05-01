@@ -39,7 +39,7 @@ kx::K kpi_api_list_v(kx::K x_) { return kx::vector<qtype::list_>(x_); } // to re
 kx::K kpi_api_dict_k(kx::K x_) {
 	std::int8_t t = static_cast<std::int8_t>(x_->t);
 	if (t != 99) { return kx::krr("type"); }
-	std::map<std::string, kx::K> m = kx::dict(x_);
+	std::map<std::string, kx::K> m = kx::k2d(x_);
 	kx::vector<qtype::symbol_> v(m.size());
 	std::map<std::string, kx::K>::iterator m1 = m.begin();
 	kx::vector<qtype::symbol_>::iterator v1 = v.begin();
@@ -56,7 +56,7 @@ kx::K kpi_api_dict_k(kx::K x_) {
 kx::K kpi_api_dict_v(kx::K x_) {
 	std::int8_t t = static_cast<std::int8_t>(x_->t);
 	if (t != 99) { return kx::krr("type"); }
-	std::map<std::string, kx::K> m = kx::dict(x_);
+	std::map<std::string, kx::K> m = kx::k2d(x_);
 	kx::raw_vector<qtype::list_> v(m.size());
 	std::map<std::string, kx::K>::iterator m1 = m.begin();
 	kx::raw_vector<qtype::list_>::iterator v1 = v.begin();
