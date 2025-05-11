@@ -512,7 +512,7 @@ kx::K d2d(std::map<std::string, kx::K> & d)
 	for (std::map<std::string, kx::K>::iterator from0 = d.begin(); from0 != d.end(); ++from0,++to0)
 	{
 		(*to0) = kx::ss((from0->first).c_str());
-		kx::jk(&v, kx::knk(1, from0->second));
+		kx::jk(&v, from0->second);
 	}
 
 	return kx::xD(k(), v);
