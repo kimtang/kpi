@@ -21,12 +21,15 @@
 # include <string>
 # include <boost/mpl/void.hpp>
 # include <boost/mpl/identity.hpp>
+# include <boost/mpl/negate.hpp>
+# include <boost/mpl/eval_if.hpp>
 # include <boost/utility/result_of.hpp>
 # include <boost/preprocessor/tuple.hpp>
 # include <boost/preprocessor/seq.hpp>
 # include <boost/date_time.hpp>
 # include <boost/iterator/iterator_facade.hpp>
-# include <boost/mpl/eval_if.hpp>
+
+# include <boost/uuid/uuid.hpp>
 
 /*
 	To ease the the interfacing in c with kdb+ we implement a wrapper around the kx structure 
@@ -73,65 +76,6 @@
 # define KT 19 // 4 time     int    kI (millisecond)
 */
 
-// kdb to c cast
-
-# define kdb_ktc_boolean(x) return 0!=x;
-# define kdb_ktc_short(x) return static_cast<short>(x);
-# define kdb_ktc_int(x)	return static_cast<int>(x);
-# define kdb_ktc_long(x) return static_cast<long long>(x);
-# define kdb_ktc_real(x) return static_cast<float>(x);
-# define kdb_ktc_float(x) return static_cast<double>(x);
-# define kdb_ktc_symbol(x) return x;
-# define kdb_ktc_date(x) return bday+boost::gregorian::days(x);
-# define kdb_ktc_char(x) return static_cast<char>(x);
-# define kdb_ktc_K(x) return x;
-
-# define kdb_ktc_timestampint64(t)																											\
-kx::J nnans = t % 1000000000;																												\
-t = (t - nnans) / 1000000000;																												\
-kx::J nsecs = t % 60;																														\
-t = (t - nsecs) / 60;																														\
-kx::J nmins = t % 60;																														\
-t = (t - nmins) / 60;																														\
-kx::J nhrs = t % 24;																														\
-t = (t - nhrs) /24;																															\
-boost::posix_time::ptime p =   kx::qtype::pday																								\
-							 + boost::gregorian::days(static_cast<int>(t))																	\
-							 + boost::posix_time::time_duration(static_cast<int>(nhrs),static_cast<int>(nmins),static_cast<int>(nsecs))		\
-							 + boost::posix_time::nanosec(nnans);																			\
-return p;																																	\
-
-
-# define kdb_ktc_datetime(x)																												\
-long long t = static_cast<long long> (x*86400000.0 );																						\
-long long millisecs = t % 86400000;																											\
-long long days = (t - millisecs) / 86400000;																								\
-return pday +boost::gregorian::days(static_cast<int>(days)) +boost::posix_time::millisec(millisecs);										\
-
-// c to kdb cast
-
-# define kdb_ctk_boolean(x) return static_cast<kx::G>(x);
-# define kdb_ctk_short(x) return static_cast<kx::H>(x);
-# define kdb_ctk_int(x)	return static_cast<kx::I>(x);
-# define kdb_ctk_long(x) return static_cast<kx::J>(x);
-# define kdb_ctk_real(x) return static_cast<kx::E>(x);
-# define kdb_ctk_float(x) return static_cast<kx::F>(x);
-# define kdb_ctk_symbol(x) return ss(x);
-# define kdb_ctk_date(x) return (gday -x).days();
-# define kdb_ctk_char(x) return static_cast<kx::G>(x);
-# define kdb_ctk_K(x) return x;
-
-// 24*60*60*1000000000
-
-# define kdb_ctk_timestampint64(x)																									\
-kx::J j = x.time_of_day().total_nanoseconds();																						\
-j += (x.date()-gday).days()* 86400000000000L;																						\
-return j ;																															\
-
-# define kdb_ctk_datetime(x)																										\
-kx::F f = x.time_of_day().total_milliseconds() / 86400000.0;																		\
-f += (x.date()-gday).days();																										\
-return f;																															\
 
 
 # define kdb_dim 9
@@ -140,41 +84,42 @@ return f;																															\
 // 0			,1		  ,2  ,3  ,4    ,5 ,6                  ,7                               ,8 
 // name			,type(int),get,ctk,getL,   ,                   ,ktc
 # define kdb_table																																			\
-((boolean				,kx_KB,g,G,kx_kG,G*,	kdb_ktc_boolean,bool							,kdb_ctk_boolean		))									\
-((short					,kx_KH,h,H,kx_kH,H*,	kdb_ktc_short,short								,kdb_ctk_short			))									\
-((int					,kx_KI,i,I,kx_kI,I*,	kdb_ktc_int,int									,kdb_ctk_int			))									\
-((long					,kx_KJ,j,J,kx_kJ,J*,	kdb_ktc_long,long long							,kdb_ctk_long			))									\
-((real					,kx_KE,e,E,kx_kE,E*,	kdb_ktc_real,float								,kdb_ctk_real			))									\
-((float					,kx_KF,f,F,kx_kF,F*,	kdb_ktc_float,double							,kdb_ctk_float			))									\
-((symbol				,kx_KS,s,S,kx_kS,S*,	kdb_ktc_symbol,char*							,kdb_ctk_symbol			))									\
-((timestampint64		,kx_KP,j,J,kx_kJ,J*,	kdb_ktc_timestampint64,boost::posix_time::ptime	,kdb_ctk_timestampint64	))									\
-((date					,kx_KD,i,I,kx_kI,I*,	kdb_ktc_date,boost::gregorian::date				,kdb_ctk_date			))									\
-((datetime				,kx_KZ,f,F,kx_kF,F*,	kdb_ktc_datetime,boost::posix_time::ptime		,kdb_ctk_datetime		))									\
-((char					,kx_KC,g,G,kx_kC,G*,	kdb_ktc_char,char								,kdb_ctk_char			))									\
-((list					,kx_KK,k,K,kx_kK,K*,	kdb_ktc_K,K										,kdb_ctk_K				))									\
+((boolean		,kx_KB,get_boolean,G,kx_kG,G*,	ktc_boolean,bool							,ctk_boolean		))									\
+((short			,kx_KH,get_short,H,kx_kH,H*,	ktc_short,short								,ctk_short			))									\
+((int			,kx_KI,get_int,I,kx_kI,I*,		ktc_int,int									,ctk_int			))									\
+((long			,kx_KJ,get_long,J,kx_kJ,J*,		ktc_long,long long							,ctk_long			))									\
+((real			,kx_KE,get_real,E,kx_kE,E*,		ktc_real,float								,ctk_real			))									\
+((float			,kx_KF,get_float,F,kx_kF,F*,	ktc_float,double							,ctk_float			))									\
+((symbol		,kx_KS,get_symbol,S,kx_kS,S*,	ktc_symbol,char*							,ctk_symbol			))									\
+((timestamp		,kx_KP,get_timestamp,J,kx_kJ,J*,ktc_timestamp,boost::posix_time::ptime		,ctk_timestamp		))									\
+((date			,kx_KD,get_date,I,kx_kI,I*,		ktc_date,boost::gregorian::date				,ctk_date			))									\
+((datetime		,kx_KZ,get_datetime,F,kx_kF,F*,	ktc_datetime,boost::posix_time::ptime		,ctk_datetime		))									\
+((char			,kx_KC,get_char,G,kx_kC,G*,		ktc_char,char								,ctk_char			))									\
+((list			,kx_KK,get_K,K,kx_kK,K*,		ktc_K,K										,ctk_K				))									\
 
 
 # define kdb_qtype(r,data,tuple)																								\
 struct BOOST_PP_TUPLE_ELEM(kdb_dim,0,tuple)##_																					\
 {																																\
 	typedef mpl::int_< BOOST_PP_TUPLE_ELEM(kdb_dim,1,tuple) > type;																\
+	typedef typename mpl::negate<mpl::int_< BOOST_PP_TUPLE_ELEM(kdb_dim,1,tuple) > >::type atom_type;							\
 	typedef BOOST_PP_TUPLE_ELEM(kdb_dim,0,tuple)##_ this_type;																	\
 	typedef BOOST_PP_TUPLE_ELEM(kdb_dim,7,tuple) value_type;																	\
 																																\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,7,tuple) ktc(BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple)  x) const										\
 	{																															\
-		BOOST_PP_TUPLE_ELEM(kdb_dim,6,tuple) (x);																				\
+		return BOOST_PP_TUPLE_ELEM(kdb_dim,6,tuple) (x);																				\
 	}																															\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple) ctk(BOOST_PP_TUPLE_ELEM(kdb_dim,7,tuple)  x) const										\
 	{																															\
-		BOOST_PP_TUPLE_ELEM(kdb_dim,8,tuple) (x);																				\
+		return BOOST_PP_TUPLE_ELEM(kdb_dim,8,tuple) (x);																				\
 	}																															\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple) get(K k) const																			\
 	{																															\
-		return k -> BOOST_PP_TUPLE_ELEM(kdb_dim,2,tuple);																		\
+		return BOOST_PP_TUPLE_ELEM(kdb_dim,2,tuple)(k);																		\
 	}																															\
 																																\
 	BOOST_PP_TUPLE_ELEM(kdb_dim,3,tuple)* getL(K k) const																		\
@@ -223,9 +168,79 @@ namespace kx {
 namespace mpl = boost::mpl;
 namespace qtype{
 
-	boost::gregorian::date const gday = boost::gregorian::date(2000,boost::gregorian::Jan,1); // used for kdb to convert the number in boost date time
-	boost::gregorian::date const bday = boost::gregorian::date(2000,boost::gregorian::Jan,1); // used for kdb to convert the number in boost date time
-	boost::posix_time::ptime const pday = boost::posix_time::ptime(gday,boost::posix_time::time_duration(0,0,0,0)); // used for kdb to convert the number in boost date time
+	boost::gregorian::date const gday = boost::gregorian::date(2000, boost::gregorian::Jan, 1); // used for kdb to convert the number in boost date time
+	boost::gregorian::date const bday = boost::gregorian::date(2000, boost::gregorian::Jan, 1); // used for kdb to convert the number in boost date time
+	boost::posix_time::ptime const pday = boost::posix_time::ptime(gday, boost::posix_time::time_duration(0, 0, 0, 0)); // used for kdb to convert the number in boost date time
+
+	bool ktc_boolean(G x) {return 0 != x;}
+	short ktc_short(H x) {return static_cast<short>(x);}
+    int ktc_int(I x) { return static_cast<int>(x); }
+	long long ktc_long(J x){return static_cast<long long>(x);}
+	float ktc_real(E x){return static_cast<float>(x);}
+	double ktc_float(F x){return static_cast<double>(x);}
+	char* ktc_symbol(S x){return x;}
+	boost::gregorian::date ktc_date(I x){return bday+boost::gregorian::days(x);}
+	char ktc_char(G x){return static_cast<char>(x);}
+	K ktc_K(K x){return x;}
+
+	boost::posix_time::ptime ktc_timestamp(J t) {
+		kx::J nnans = t % 1000000000;
+		t = (t - nnans) / 1000000000;
+		kx::J nsecs = t % 60;
+		t = (t - nsecs) / 60;
+		kx::J nmins = t % 60;
+		t = (t - nmins) / 60;
+		kx::J nhrs = t % 24;
+		t = (t - nhrs) / 24;
+		boost::posix_time::ptime p = kx::qtype::pday
+			+ boost::gregorian::days(static_cast<int>(t))
+			+ boost::posix_time::time_duration(static_cast<int>(nhrs), static_cast<int>(nmins), static_cast<int>(nsecs))
+			+ boost::posix_time::nanosec(nnans);
+		return p;
+	}
+	boost::posix_time::ptime ktc_datetime(F x) {
+		long long t = static_cast<long long> (x * 86400000.0);
+		long long millisecs = t % 86400000;
+		long long days = (t - millisecs) / 86400000;
+		return pday + boost::gregorian::days(static_cast<int>(days)) + boost::posix_time::millisec(millisecs);
+	}
+
+	G ctk_boolean(bool x) { return static_cast<kx::G>(x); }
+	H ctk_short(short x) { return static_cast<kx::H>(x); }
+	I ctk_int(int x) { return static_cast<kx::I>(x); }
+	J ctk_long(long long x) { return static_cast<kx::J>(x); }
+	E ctk_real(float x) { return static_cast<kx::E>(x); }
+	F ctk_float(double x) { return static_cast<kx::F>(x); }
+	S ctk_symbol(char* x) { return ss(x); }
+	I ctk_date(boost::gregorian::date x) { return (gday - x).days(); }
+	G ctk_char(char x) { return static_cast<kx::G>(x); }
+	K ctk_K(K x) { return x; }
+	J ctk_timestamp(boost::posix_time::ptime x) {
+		kx::J j = x.time_of_day().total_nanoseconds();
+		j += (x.date() - gday).days() * 86400000000000L;
+		return j;
+	}
+
+	F ctk_datetime(boost::posix_time::ptime x) {
+		kx::F f = x.time_of_day().total_milliseconds() / 86400000.0;
+		f += (x.date() - gday).days();
+		return f;
+	}
+
+	G get_boolean(K k) { return  k->g; }
+	H get_short(K k) { return  k->h; }
+	I get_int(K k) { return  k->i; }
+	J get_long(K k) { return  k->j; }
+	E get_real(K k) { return  k->e; }
+	F get_float(K k) { return  k->f; }
+	S get_symbol(K k) { return  k->s; }
+	J get_timestamp(K k) { return  k->j; }
+	I get_date(K k) { return  k->i; }
+	F get_datetime(K k) { return  k->f; }
+	G get_char(K k) { return  k->g; }
+	K get_K(K k) { return  k->k; }
+
+
 	BOOST_PP_SEQ_FOR_EACH(kdb_qtype,~,kdb_table)
 
 	/* Todo:

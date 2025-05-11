@@ -10,3 +10,4 @@ EXPORTS
 	kpi_api_list_v ; 1
 	kpi_api_dict_k ; 1
 	kpi_api_dict_v ; 1
+	kpi_api_same   ; 1

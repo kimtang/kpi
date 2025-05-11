@@ -69,3 +69,22 @@ kx::K kpi_api_dict_v(kx::K x_) {
 
 	return v.r1();
 }
+
+kx::K kpi_api_same(kx::K x_) { 
+
+	kx::K x=kx::ks(kx::ss("placeholder"));
+	std::int8_t t = static_cast<std::int8_t>(x_->t);
+	switch (t) {
+	case qtype::boolean_::atom_type::value:
+		x = kx::kb(get<qtype::boolean_>(x_));
+		break;
+	case qtype::boolean_::type::value:
+		x = kx::vector<qtype::boolean_>(x_);
+		break;
+	default:
+		break;
+	}
+	return x;
+	// };
+	// return kx::kj(x_->n);
+ }
