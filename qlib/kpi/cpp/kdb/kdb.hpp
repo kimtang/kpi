@@ -535,7 +535,7 @@ kx::K d2d(std::map<std::string, kx::K> & d)
 	return kx::xD(k(), v);
 }
 
-kx::K d2t(std::map<std::string, kx::K>& d){return kx::xT(d2t(d));}
+kx::K d2t(std::map<std::string, kx::K>& d){return kx::xT(d2d(d));}
 
 } // kx
 
