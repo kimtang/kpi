@@ -381,6 +381,7 @@ public:
 	typedef std::size_t size_type;
 	typedef typename result_of::value<Q>::type value_type;
 	typedef typename value_type* ptr_type;
+	typedef typename value_type const* const_ptr_type;
 
 	typedef typename Q::type q_id;
 	typedef kx::iterator<Q> iterator;
@@ -422,6 +423,7 @@ public:
 	vector(size_type size) : k_(kx::ktn(q_id(),size)),size_(size) {};
 	vector(size_type size,value_type v) : k_(kx::ktn(q_id(),size)),size_(size) {std::fill(begin(),end(),v);};
 	vector(ptr_type b, ptr_type e) : k_(kx::ktn(q_id(),e-b)),size_(e-b){std::copy(b,e,begin()); }
+	vector(const_ptr_type b, const_ptr_type e) : k_(kx::ktn(q_id(), e - b)), size_(e - b) { std::copy(b, e, begin()); }
 	kx::K operator()() {return k_;}
 	operator kx::K() {return k_;}
 	// here i need an iterator
