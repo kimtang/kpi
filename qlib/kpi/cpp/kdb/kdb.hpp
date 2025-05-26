@@ -520,6 +520,32 @@ std::map<std::string, kx::K> k2d(kx::K k_)
 	return m;
 }
 
+std::map<std::string, kx::K> t2d(kx::K k_)
+{
+	std::map<std::string, kx::K> m;
+	std::int8_t t0 = static_cast<std::int8_t>(k_->t);
+	if (t0 != 98) { return m; }
+	// kx::result_of::value<qtype::list_>::type* l_ = kx::getL<qtype::list_>(k_);
+	kx::K* l_ = kx::getL<qtype::list_>(k_->k);
+	kx::K k0 = l_[0];
+	kx::raw_vector<qtype::list_>v(l_[1]);
+
+	std::int8_t t1 = static_cast<std::int8_t>(k0->t);
+	if (t1 != qtype::symbol_::type()) { return m; };
+
+	kx::raw_vector<qtype::symbol_>k(k0);
+	kx::raw_vector<qtype::list_>::iterator v1 = v.begin();
+	kx::raw_vector<qtype::symbol_>::iterator k1 = k.begin();
+	while (v1 != v.end() && k1 != k.end())
+	{
+		std::string s(*k1);
+		m.insert(std::make_pair(s, *v1));
+		v1++; k1++;
+	}
+
+	return m;
+}
+
 kx::K d2d(std::map<std::string, kx::K> & d)
 {
 	kx::vector<qtype::symbol_>k(d.size());
