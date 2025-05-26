@@ -277,7 +277,7 @@ template<typename Q>
 typename result_of::value<Q>::type value(K k) {return Q().value(k);};
 
 template<typename Q,typename T> 
-typename result_of::ktc<Q>::type ktc(T const& t) {return Q().ktc(t);};
+typename result_of::ktc<Q>::type ktc(T & t) {return Q().ktc(t);};
 
 template<typename Q,typename T> 
 typename result_of::ctk<Q>::type ctk(T t) {return Q().ctk(t);};
