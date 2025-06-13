@@ -1,5 +1,5 @@
 
-d)lib kpi.kpi 
+d)lib %kpi%/qlib/kpi/kpi.q
  Library for working with qkdb internal api
  q).import.module`kpi 
  q).import.module`kpi.kpi
@@ -7,7 +7,7 @@ d)lib kpi.kpi
 
 .kpi.summary:{} 
 
-d)fnc kpi.kpi.summary 
+d).kpi.summary 
  Give a summary of this function
  q) .kpi.summary[] 
 
